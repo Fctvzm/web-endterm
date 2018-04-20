@@ -1,31 +1,42 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from blogtemplate.models import Blog
-from django.http import HttpResponse, JsonResponse, QueryDict
+from .forms import BlogForm
 
 def index(request):
-	if request.method == "GET":
-		blogs = Blog.objects.all()
-		return render(request, 'index.html', {"blog_list": blogs})
-	elif request.method == "POST":
-	    data = request.POST
-	    blog = Blog()
-	    blog.title = data.get('title', '')
-	    blog.body = data.get('body', '')
-	    blog.save()
-	    return render(request, 'index.html', {"blog_list": blogs})
+	blogs = Blog.objects.all()
+	return render(request, 'index.html', {"blog_list": blogs})
 
 def blog_details(request, blog_id):
- 	blog = Blog.objects.get(pk=blog_id)
+	blog = Blog.objects.get(pk=blog_id)
+	return render(request, 'blog_details.html', {"blog": blog})
 
- 	if request.method == "GET":
-		return render(request, 'blog_details.html', {"blog": blog})
-	elif request.method == "PUT":
-	    data = QueryDict(request.body)
-	    blog.title = data.get('title', blog.title)
-	    blog.body = data.get('body', blog.body)
-	    blog.save()
-	    return render(request, 'blog_details.html', {"blog": blog})
-	elif request.method == "DELETE":
-	    blog.delete()
-	 	return render(request, 'index.html', {"blog_list": blogs})
+
+def blog_new(request):
+	if request.method == "POST":
+		form = BlogForm(request.POST)
+		if form.is_valid():
+			blog = form.save(commit = False)
+			blog.save()
+			return redirect('blog_details', blog_id=blog.pk)
+	else:
+		form = BlogForm()
+		return render(request, 'blog_edit.html', {'form': form})
+
+def blog_edit(request, blog_id):
+	blog = get_object_or_404(Blog, pk=blog_id)
+	if request.method == "POST":
+		form = BlogForm(request.POST, instance=blog)
+		if form.is_valid():
+			blog = form.save(commit=False)
+			blog.save()
+			return redirect('blog_details', blog_id=blog.pk)
+	else:
+		form = BlogForm(instance=blog)
+		return render(request, 'blog_edit.html', {'form': form})
+
+def blog_delete(request, blog_id):
+	blog = get_object_or_404(Blog, pk=blog_id)
+	blog.delete()
+	new_blogs = Blog.objects.all()
+	return render(request, 'index.html', {"blog_list": new_blogs})
 

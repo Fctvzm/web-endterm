@@ -11,6 +11,8 @@
       <p class="pull-right">{{blog.created_at}}</p>   
     </div>
   </div>
+  <a class="btn btn-default" href="{% url 'blog_edit' blog_id=blog.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+  <a class="btn btn-default" href="{% url 'blog_delete' blog_id=blog.id %}"><span class="glyphicon glyphicon-remove"></span></a>
 </div>
 
 {% endblock content %}
